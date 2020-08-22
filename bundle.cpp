@@ -37,9 +37,19 @@ namespace pit {
 		case Instruction::LD_IMM:
 			return one_arg("LD_IMM", offset);
 		case Instruction::LD_CONST:
-			return two_args("LD_CONST", offset);
+			return one_arg("LD_CONST", offset);
 		case Instruction::RET:
 			return no_arg("RET", offset);
+		case Instruction::NEG:
+			return no_arg("NEG", offset);
+		case Instruction::ADD:
+			return no_arg("ADD", offset);
+		case Instruction::SUB:
+			return no_arg("SUB", offset);
+		case Instruction::MUL:
+			return no_arg("MUL", offset);
+		case Instruction::DIV:
+			return no_arg("DIV", offset);
 		default:
 			std::cout << "unknown opcode" << std::endl;
 			return 0;

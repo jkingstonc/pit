@@ -3,6 +3,7 @@
 #include <string>
 #include <iostream>
 #include <vector>
+#include <stack>
 #include "value.hpp"
 #include "instruction.hpp"
 /*
@@ -29,7 +30,6 @@ namespace pit {
 		std::vector<uint8_t> code;
 		// lines corresponding to bytecode
 		std::vector<uint32_t> lines;
-
 
 	private:
 		inline int no_arg(std::string instr, uint32_t offset);
