@@ -34,8 +34,12 @@ namespace pit {
 	uint32_t Bundle::disassemble_instruction(uint32_t offset) {
 		int32_t instr = code.at(offset);
 		switch (instr){
-		case Instruction::LD_IMM:
-			return one_arg("LD_IMM", offset);
+		case Instruction::HLT:
+			return no_arg("HLT", offset);
+		case Instruction::LD_I_IMM:
+			return one_arg("LD_I_IMM", offset);
+		case Instruction::LD_B_IMM:
+			return one_arg("LD_B_IMM", offset);
 		case Instruction::LD_CONST:
 			return one_arg("LD_CONST", offset);
 		case Instruction::RET:
@@ -50,6 +54,18 @@ namespace pit {
 			return no_arg("MUL", offset);
 		case Instruction::DIV:
 			return no_arg("DIV", offset);
+		case Instruction::NOT:
+			return no_arg("NOT", offset);
+		case Instruction::EQ:
+			return no_arg("EQ", offset);
+		case Instruction::GT:
+			return no_arg("GT", offset);
+		case Instruction::LT:
+			return no_arg("LT", offset);
+		case Instruction::GE:
+			return no_arg("GE", offset);
+		case Instruction::LE:
+			return no_arg("LE", offset);
 		default:
 			std::cout << "unknown opcode" << std::endl;
 			return 0;

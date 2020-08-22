@@ -7,8 +7,6 @@
 #define DEBUG_EXEC_INSTR
 #define EXEC_STACK_SIZE 256
 
-#define BINARY(x, y, op) (x op y)
-
 /*
 this file actually runs the 'cyanide' virtual machine
 */
@@ -31,13 +29,14 @@ namespace pit {
 		Value exec_stack[EXEC_STACK_SIZE];
 		uint8_t exec_stack_ptr;
 
-		void runtime_err(std::string msg);
+		ExecutionResult runtime_err(std::string msg);
 
 		void setup_internals();
 		inline void debug_exec_stack();
 
 		inline int instr_ptr_offset();
 		inline int stack_ptr_offset();
+		inline bool binary_op(Instruction op);
 		inline uint8_t next_instr();
 		inline void push(Value value);
 		inline Value pop();

@@ -34,26 +34,35 @@ namespace pit {
 			return v;
 		}
 
+		inline bool equals(Value other) {
+			if (type != other.type) return false;
+			switch (type) {
+			case BOOL: return data.boolean == other.as_bool();
+			case NUMBER: return data.num == other.as_num();
+			}
+		}
 
 		inline bool as_bool() { return data.boolean; }
 		inline float as_num() { return data.num; }
 
+		inline bool is_bool() {
+			return type == ValueType::BOOL;
+		}
 		inline bool is_num() {
 			return type == ValueType::NUMBER;
 		}
 
 		inline std::string debug() {
-			switch (type){
-			case BOOL: {
-				std::ostringstream stringStream;
+			std::ostringstream stringStream;
+			switch (type) {
+			case BOOL:
 				stringStream << "bool: " << data.boolean;
-				return stringStream.str();
-			}
+				break;
 			case NUMBER:
-				std::ostringstream stringStream;
 				stringStream << "num: " << data.num;
-				return stringStream.str();
+				break;
 			}
+			return stringStream.str();
 		}
 
 		ValueType type;

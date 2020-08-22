@@ -8,7 +8,9 @@ namespace pit {
 	class Bundle;
 
 	enum Instruction {
-		LD_IMM,   // load an immediate integer value e.g. LD_IMM 22
+		HLT,
+		LD_I_IMM,   // load an immediate integer value e.g. LD_IMM 22
+		LD_B_IMM,
 		LD_CONST,
 		LD_LOCAL,
 		ST_LOCAL,

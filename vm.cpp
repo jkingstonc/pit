@@ -19,10 +19,15 @@ namespace pit {
 #endif
 			uint8_t instr = next_instr();
 			switch (instr){
-				case Instruction::LD_IMM: {
+				case Instruction::HLT: return ExecutionResult::EXEC_OK;
+				case Instruction::LD_I_IMM: {
 					uint8_t immediate = next_instr();
-					Value value = Value::num_val(immediate);
-					std::cout << "immediate: " << value.data.num << std::endl;
+					push(Value::num_val(immediate));
+					break;
+				}
+				case Instruction::LD_B_IMM: {
+					uint8_t immediate = next_instr();
+					push(Value::bool_val(immediate ? true : false));
 					break;
 				}
 				case Instruction::LD_CONST: {
@@ -35,50 +40,26 @@ namespace pit {
 					return ExecutionResult::EXEC_OK;
 				case Instruction::NEG: {
 					if (!peek(0).is_num()) {
-						runtime_err(std::string("cannot negate non-numeric value"));
-						return ExecutionResult::EXEC_RUNTIME_ERR;
+						return runtime_err(std::string("cannot negate non-numeric value"));
 					}
 					push(Value::num_val(-pop().as_num()));
 					break;
 				}
-				case Instruction::ADD: {
-					if (!peek(0).is_num()) {
-						runtime_err(std::string("cannot add non-numeric values"));
-						return ExecutionResult::EXEC_RUNTIME_ERR;
+
+				case Instruction::NOT: {
+					if (!peek(0).is_bool()) {
+						return runtime_err(std::string("cannot not non-boolean value"));
 					}
-					Value v1 = pop();
-					Value v2 = pop();
-					push(Value::num_val(BINARY(v1.as_num(), v2.as_num(), +)));
-					break; 
-				}
-				case Instruction::SUB: {
-					if (!peek(0).is_num()) {
-						runtime_err(std::string("cannot add non-numeric values"));
-						return ExecutionResult::EXEC_RUNTIME_ERR;
-					}
-					Value v1 = pop();
-					Value v2 = pop();
-					push(Value::num_val(BINARY(v1.as_num(), v2.as_num(), -)));
+					push(Value::bool_val(!pop().as_bool()));
 					break;
 				}
-				case Instruction::MUL: {
-					if (!peek(0).is_num()) {
-						runtime_err(std::string("cannot add non-numeric values"));
-						return ExecutionResult::EXEC_RUNTIME_ERR;
-					}
-					Value v1 = pop();
-					Value v2 = pop();
-					push(Value::num_val(BINARY(v1.as_num(), v2.as_num(), *)));
-					break;
-				}
-				case Instruction::DIV: {
-					if (!peek(0).is_num()) {
-						runtime_err(std::string("cannot add non-numeric values"));
-						return ExecutionResult::EXEC_RUNTIME_ERR;
-					}
-					Value v1 = pop();
-					Value v2 = pop();
-					push(Value::num_val(BINARY(v1.as_num(), v2.as_num(), /)));
+				case Instruction::ADD:
+				case Instruction::SUB:
+				case Instruction::MUL:
+				case Instruction::DIV:
+				case Instruction::EQ: {
+					if (!binary_op((Instruction)instr))
+						return runtime_err(std::string("cannot apply operator non-numeric values"));
 					break;
 				}
 			}
@@ -96,10 +77,28 @@ namespace pit {
 	}
 
 
-	void VM::runtime_err(std::string msg){
+	inline bool VM::binary_op(Instruction op) {
+		if (!(peek(0).is_num() && peek(1).is_num())) 
+			return false;
+		switch (op) {
+		case Instruction::ADD: push(Value::num_val(pop().as_num() + pop().as_num())); break;
+		case Instruction::SUB: push(Value::num_val(pop().as_num() - pop().as_num())); break;
+		case Instruction::MUL: push(Value::num_val(pop().as_num() * pop().as_num())); break;
+		case Instruction::DIV: push(Value::num_val(pop().as_num() / pop().as_num())); break;
+		case Instruction::GT: push(Value::bool_val(pop().as_num() > pop().as_num())); break;
+		case Instruction::LT: push(Value::bool_val(pop().as_num() < pop().as_num())); break;
+		case Instruction::GE: push(Value::bool_val(pop().as_num() >= pop().as_num())); break;
+		case Instruction::LE: push(Value::bool_val(pop().as_num() <= pop().as_num())); break;
+		case Instruction::EQ: push(Value::bool_val(pop().as_num() == pop().as_num())); break;
+		}
+		return true;
+	}
+
+	ExecutionResult VM::runtime_err(std::string msg){
 		int line_ptr = (int)((instr_ptr - 1) - bundle.code.data());
 		uint32_t line = bundle.lines[line_ptr];
 		std::cout << "Runtime Error [line " << line << "]\n" << msg << std::endl;
+		return ExecutionResult::EXEC_RUNTIME_ERR;
 	}
 
 
