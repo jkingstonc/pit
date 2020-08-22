@@ -28,7 +28,6 @@ namespace pit {
 				case Instruction::LD_CONST: {
 					uint8_t pool_index = next_instr();
 					Value constant = bundle.constant_pool.at(pool_index);
-					std::cout << "constant: " << (int)constant.as_num() << std::endl;
 					push(constant);
 					break;
 				}
@@ -40,24 +39,81 @@ namespace pit {
 						return ExecutionResult::EXEC_RUNTIME_ERR;
 					}
 					push(Value::num_val(-pop().as_num()));
+					break;
 				}
-				case Instruction::ADD: {}
-				case Instruction::SUB: {}
-				case Instruction::MUL: {}
-				case Instruction::DIV: {}
+				case Instruction::ADD: {
+					if (!peek(0).is_num()) {
+						runtime_err(std::string("cannot add non-numeric values"));
+						return ExecutionResult::EXEC_RUNTIME_ERR;
+					}
+					Value v1 = pop();
+					Value v2 = pop();
+					push(Value::num_val(BINARY(v1.as_num(), v2.as_num(), +)));
+					break; 
+				}
+				case Instruction::SUB: {
+					if (!peek(0).is_num()) {
+						runtime_err(std::string("cannot add non-numeric values"));
+						return ExecutionResult::EXEC_RUNTIME_ERR;
+					}
+					Value v1 = pop();
+					Value v2 = pop();
+					push(Value::num_val(BINARY(v1.as_num(), v2.as_num(), -)));
+					break;
+				}
+				case Instruction::MUL: {
+					if (!peek(0).is_num()) {
+						runtime_err(std::string("cannot add non-numeric values"));
+						return ExecutionResult::EXEC_RUNTIME_ERR;
+					}
+					Value v1 = pop();
+					Value v2 = pop();
+					push(Value::num_val(BINARY(v1.as_num(), v2.as_num(), *)));
+					break;
+				}
+				case Instruction::DIV: {
+					if (!peek(0).is_num()) {
+						runtime_err(std::string("cannot add non-numeric values"));
+						return ExecutionResult::EXEC_RUNTIME_ERR;
+					}
+					Value v1 = pop();
+					Value v2 = pop();
+					push(Value::num_val(BINARY(v1.as_num(), v2.as_num(), /)));
+					break;
+				}
 			}
+
+			debug_exec_stack();
 		}
+	}
+
+	inline int VM::instr_ptr_offset() {
+		return (int)((instr_ptr - 1) - bundle.code.data());
+	}
+
+	inline int VM::stack_ptr_offset() {
+		return exec_stack_ptr;
 	}
 
 
 	void VM::runtime_err(std::string msg){
-		std::cout << "runtime error [" << bundle.lines[(int)((instr_ptr-1) - bundle.code.data())] << "] " << msg << std::endl;
+		int line_ptr = (int)((instr_ptr - 1) - bundle.code.data());
+		uint32_t line = bundle.lines[line_ptr];
+		std::cout << "Runtime Error [line " << line << "]\n" << msg << std::endl;
 	}
 
 
 	void VM::setup_internals(){
 		instr_ptr = bundle.code.data();
 		exec_stack_ptr = 0;
+	}
+
+
+	inline void VM::debug_exec_stack() {
+		std::cout << "--stack--" << std::endl;
+		for (int i = 0; i<exec_stack_ptr ; i++) {
+			std::cout << i << " : " << peek(i).debug() << std::endl;
+		}
 	}
 
 	inline uint8_t VM::next_instr(){
