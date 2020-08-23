@@ -34,37 +34,37 @@ namespace pit {
 	uint32_t Bundle::disassemble_instruction(uint32_t offset) {
 		int32_t instr = code.at(offset);
 		switch (instr){
-		case Instruction::HLT:
+		case Instruction::OP_HLT:
 			return no_arg("HLT", offset);
-		case Instruction::LD_I_IMM:
+		case Instruction::OP_LD_I_IMM:
 			return one_arg("LD_I_IMM", offset);
-		case Instruction::LD_B_IMM:
+		case Instruction::OP_LD_B_IMM:
 			return one_arg("LD_B_IMM", offset);
-		case Instruction::LD_CONST:
+		case Instruction::OP_LD_CONST:
 			return one_arg("LD_CONST", offset);
-		case Instruction::RET:
+		case Instruction::OP_RET:
 			return no_arg("RET", offset);
-		case Instruction::NEG:
+		case Instruction::OP_NEG:
 			return no_arg("NEG", offset);
-		case Instruction::ADD:
+		case Instruction::OP_ADD:
 			return no_arg("ADD", offset);
-		case Instruction::SUB:
+		case Instruction::OP_SUB:
 			return no_arg("SUB", offset);
-		case Instruction::MUL:
+		case Instruction::OP_MUL:
 			return no_arg("MUL", offset);
-		case Instruction::DIV:
+		case Instruction::OP_DIV:
 			return no_arg("DIV", offset);
-		case Instruction::NOT:
+		case Instruction::OP_NOT:
 			return no_arg("NOT", offset);
-		case Instruction::EQ:
+		case Instruction::OP_EQ:
 			return no_arg("EQ", offset);
-		case Instruction::GT:
+		case Instruction::OP_GT:
 			return no_arg("GT", offset);
-		case Instruction::LT:
+		case Instruction::OP_LT:
 			return no_arg("LT", offset);
-		case Instruction::GE:
+		case Instruction::OP_GE:
 			return no_arg("GE", offset);
-		case Instruction::LE:
+		case Instruction::OP_LE:
 			return no_arg("LE", offset);
 		default:
 			std::cout << "unknown opcode" << std::endl;

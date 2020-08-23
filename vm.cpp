@@ -19,26 +19,26 @@ namespace pit {
 #endif
 			uint8_t instr = next_instr();
 			switch (instr){
-				case Instruction::HLT: return ExecutionResult::EXEC_OK;
-				case Instruction::LD_I_IMM: {
+				case Instruction::OP_HLT: return ExecutionResult::EXEC_OK;
+				case Instruction::OP_LD_I_IMM: {
 					uint8_t immediate = next_instr();
 					push(Value::num_val(immediate));
 					break;
 				}
-				case Instruction::LD_B_IMM: {
+				case Instruction::OP_LD_B_IMM: {
 					uint8_t immediate = next_instr();
 					push(Value::bool_val(immediate ? true : false));
 					break;
 				}
-				case Instruction::LD_CONST: {
+				case Instruction::OP_LD_CONST: {
 					uint8_t pool_index = next_instr();
 					Value constant = bundle.constant_pool.at(pool_index);
 					push(constant);
 					break;
 				}
-				case Instruction::RET:
+				case Instruction::OP_RET:
 					return ExecutionResult::EXEC_OK;
-				case Instruction::NEG: {
+				case Instruction::OP_NEG: {
 					if (!peek(0).is_num()) {
 						return runtime_err(std::string("cannot negate non-numeric value"));
 					}
@@ -46,18 +46,18 @@ namespace pit {
 					break;
 				}
 
-				case Instruction::NOT: {
+				case Instruction::OP_NOT: {
 					if (!peek(0).is_bool()) {
 						return runtime_err(std::string("cannot not non-boolean value"));
 					}
 					push(Value::bool_val(!pop().as_bool()));
 					break;
 				}
-				case Instruction::ADD:
-				case Instruction::SUB:
-				case Instruction::MUL:
-				case Instruction::DIV:
-				case Instruction::EQ: {
+				case Instruction::OP_ADD:
+				case Instruction::OP_SUB:
+				case Instruction::OP_MUL:
+				case Instruction::OP_DIV:
+				case Instruction::OP_EQ: {
 					if (!binary_op((Instruction)instr))
 						return runtime_err(std::string("cannot apply operator non-numeric values"));
 					break;
@@ -81,15 +81,15 @@ namespace pit {
 		if (!(peek(0).is_num() && peek(1).is_num())) 
 			return false;
 		switch (op) {
-		case Instruction::ADD: push(Value::num_val(pop().as_num() + pop().as_num())); break;
-		case Instruction::SUB: push(Value::num_val(pop().as_num() - pop().as_num())); break;
-		case Instruction::MUL: push(Value::num_val(pop().as_num() * pop().as_num())); break;
-		case Instruction::DIV: push(Value::num_val(pop().as_num() / pop().as_num())); break;
-		case Instruction::GT: push(Value::bool_val(pop().as_num() > pop().as_num())); break;
-		case Instruction::LT: push(Value::bool_val(pop().as_num() < pop().as_num())); break;
-		case Instruction::GE: push(Value::bool_val(pop().as_num() >= pop().as_num())); break;
-		case Instruction::LE: push(Value::bool_val(pop().as_num() <= pop().as_num())); break;
-		case Instruction::EQ: push(Value::bool_val(pop().as_num() == pop().as_num())); break;
+		case Instruction::OP_ADD: push(Value::num_val(pop().as_num() + pop().as_num())); break;
+		case Instruction::OP_SUB: push(Value::num_val(pop().as_num() - pop().as_num())); break;
+		case Instruction::OP_MUL: push(Value::num_val(pop().as_num() * pop().as_num())); break;
+		case Instruction::OP_DIV: push(Value::num_val(pop().as_num() / pop().as_num())); break;
+		case Instruction::OP_GT: push(Value::bool_val(pop().as_num() > pop().as_num())); break;
+		case Instruction::OP_LT: push(Value::bool_val(pop().as_num() < pop().as_num())); break;
+		case Instruction::OP_GE: push(Value::bool_val(pop().as_num() >= pop().as_num())); break;
+		case Instruction::OP_LE: push(Value::bool_val(pop().as_num() <= pop().as_num())); break;
+		case Instruction::OP_EQ: push(Value::bool_val(pop().equals(pop()))); break;
 		}
 		return true;
 	}

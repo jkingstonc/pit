@@ -6,16 +6,31 @@
 
 namespace pit {
 		
+
+	enum ReferenceType {
+		BUNDLE,
+		CONTAINER,
+	};
+
 	enum ValueType {
 		BOOL,
 		NUMBER,
-		STRING,     // reference
-		BUNDLE,     // reference (fn is a bundle)
-		CONTAINER,	// reference
-		TYPE,
+		REFERENCE,
 		SIGNATURE, 
 		ATOM,
 	};
+
+	typedef struct Reference {
+		ReferenceType ref_type;
+	} Reference;
+
+	typedef struct RefBundle {}RefBundle;
+
+	// a container essentially extends reference
+	typedef struct RefContainer {
+		Reference reference;
+		uint32_t length;
+	} RefContainer;
 
 	// a value represents a runtime value of a pit value
 	typedef struct Value {
@@ -51,6 +66,12 @@ namespace pit {
 		inline bool is_num() {
 			return type == ValueType::NUMBER;
 		}
+		inline bool is_bundle() {
+			return type == ValueType::REFERENCE && data.ref->ref_type == BUNDLE;
+		}
+		inline bool is_container() {
+			return type == ValueType::REFERENCE && data.ref->ref_type==CONTAINER;
+		}
 
 		inline std::string debug() {
 			std::ostringstream stringStream;
@@ -61,6 +82,9 @@ namespace pit {
 			case NUMBER:
 				stringStream << "num: " << data.num;
 				break;
+			case REFERENCE:
+				stringStream << "reference: ";
+				break;
 			}
 			return stringStream.str();
 		}
@@ -69,6 +93,7 @@ namespace pit {
 		union ValueData{
 			bool boolean;
 			float num;
+			Reference* ref;
 		} data;
 	}Value;
 }
