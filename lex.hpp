@@ -4,16 +4,23 @@
 #include <iostream>
 #include "token.hpp"
 
+
 #define DEBUG_LEX_TOKENS
 
 namespace pit {
+
+	enum class LexResult {
+		LEX_OK,
+		LEX_ERR,
+	};
+
 	class Lexer{
 	public:
-		Lexer(std::string source);
-		std::vector<Token> lex();
+		Lexer();
+		LexResult lex(std::string src, std::shared_ptr<std::vector<Token>> tokens);
 		std::string src;
-		std::vector<Token> tokens;
 	private:
+		std::shared_ptr<std::vector<Token>> tokens;
 		Position pos;
 		uint32_t current;
 		inline char next();

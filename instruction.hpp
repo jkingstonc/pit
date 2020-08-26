@@ -9,14 +9,16 @@ namespace pit {
 
 	enum Instruction {
 		OP_HLT,
-		OP_LD_I_IMM,   // load an immediate integer value e.g. LD_IMM 22
+		OP_LD_I_IMM,
 		OP_LD_B_IMM,
 		OP_LD_CONST,
 		OP_LD_LOCAL,
 		OP_ST_LOCAL,
 		OP_JMP,
 		OP_CALL,
+		OP_YIELD,
 		OP_RET,
+		OP_NEW_BUNDLE,
 		OP_NEW_CONT,
 		OP_GET_CONT,
 		OP_SET_CONT,

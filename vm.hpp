@@ -2,6 +2,7 @@
 #include "bundle.hpp"
 #include "instruction.hpp"
 #include "value.hpp"
+#include "job.hpp"
 #include <stack>
 
 #define DEBUG_EXEC_INSTR
@@ -23,6 +24,9 @@ namespace pit {
 		VM();
 		ExecutionResult run(Bundle bundle);
 	private:
+
+		JobPool job_pool;
+
 		Bundle bundle;
 		uint8_t*instr_ptr;
 

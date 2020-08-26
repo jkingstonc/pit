@@ -31,6 +31,7 @@ namespace pit {
 		// lines corresponding to bytecode
 		std::vector<uint32_t> lines;
 
+		std::string name;
 	private:
 		inline int no_arg(std::string instr, uint32_t offset);
 		inline int one_arg(std::string instr, uint32_t offset);
