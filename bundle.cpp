@@ -34,6 +34,8 @@ namespace pit {
 	uint32_t Bundle::disassemble_instruction(uint32_t offset) {
 		int32_t instr = code.at(offset);
 		switch (instr){
+		case Instruction::OP_DBG:
+			return no_arg("DBG", offset);
 		case Instruction::OP_HLT:
 			return no_arg("HLT", offset);
 		case Instruction::OP_LD_I_IMM:
@@ -42,8 +44,12 @@ namespace pit {
 			return one_arg("LD_B_IMM", offset);
 		case Instruction::OP_LD_CONST:
 			return one_arg("LD_CONST", offset);
+		case Instruction::OP_NEW_CONT:
+			return one_arg("NEW_CONT", offset);
 		case Instruction::OP_RET:
 			return no_arg("RET", offset);
+		case Instruction::OP_YIELD:
+			return no_arg("YIELD", offset);
 		case Instruction::OP_NEG:
 			return no_arg("NEG", offset);
 		case Instruction::OP_ADD:

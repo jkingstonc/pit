@@ -4,6 +4,7 @@
 #include <string>
 #include <sstream>
 #include <variant>
+#include <vector>
 
 namespace pit {
 		
@@ -31,18 +32,17 @@ namespace pit {
 
 	typedef struct RefBundle : public Reference {
 	public:
-		RefBundle(std::shared_ptr<Bundle> bundle) {ref_type = BUNDLE;this->bundle = bundle;}
-		std::string debug() { return "<ref-bundle>"; }
+		RefBundle(std::shared_ptr<Bundle> bundle);
+		std::string debug();
 		std::shared_ptr<Bundle> bundle;
 	}RefBundle;
 
 	// a container essentially extends reference
 	typedef struct RefContainer : public Reference {
 	public:
-		RefContainer(uint32_t length) { this->length = length; this->data = std::vector<Value>(); }
-		RefContainer(uint32_t length, std::vector<Value> init_values) { this->length = length; this->data = init_values; }
-		std::string debug() { return "<ref-container>"; }
-		uint32_t length;
+		RefContainer(uint32_t size, std::vector<Value> init_values);
+		std::string debug();
+		uint32_t size;
 		std::vector<Value> data;
 	} RefContainer;
 
@@ -70,13 +70,6 @@ namespace pit {
 			return v;
 		}
 
-		inline static Value container_value(uint32_t size) {
-			Value v;
-			v.type = REFERENCE;
-			v.data = std::make_shared<RefContainer>(size);
-			return v;
-		}
-
 		inline static Value container_value(uint32_t size, std::vector<Value> init_values) {
 			Value v;
 			v.type = REFERENCE;
@@ -92,10 +85,18 @@ namespace pit {
 			}
 		}
 
-		inline bool as_bool() { return std::get<bool>(data); }
-		inline float as_num() { return std::get<float>(data); }
-		inline std::shared_ptr<RefBundle> as_bundle() { std::dynamic_pointer_cast<RefBundle>(std::get<std::shared_ptr<Reference>>(data)); }
-		inline std::shared_ptr<RefBundle> as_container() { std::dynamic_pointer_cast<RefContainer>(std::get<std::shared_ptr<Reference>>(data)); }
+		inline bool as_bool() { 
+			return std::get<bool>(data); 
+		}
+		inline float as_num() {
+			return std::get<float>(data); 
+		}
+		inline std::shared_ptr<RefBundle> as_bundle() { 
+			return std::dynamic_pointer_cast<RefBundle>(std::get<std::shared_ptr<Reference>>(data)); 
+		}
+		inline std::shared_ptr<RefContainer> as_container() {
+			return std::dynamic_pointer_cast<RefContainer>(std::get<std::shared_ptr<Reference>>(data)); 
+		}
 
 		inline bool is_bool() {
 			return type == ValueType::BOOL;

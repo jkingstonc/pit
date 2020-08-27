@@ -8,6 +8,7 @@ namespace pit {
 	class Bundle;
 
 	enum Instruction {
+		OP_DBG,
 		OP_HLT,
 		OP_LD_I_IMM,
 		OP_LD_B_IMM,

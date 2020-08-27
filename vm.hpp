@@ -6,6 +6,7 @@
 #include <stack>
 
 #define DEBUG_EXEC_INSTR
+#define DEBUG_EXEC_STACK
 #define EXEC_STACK_SIZE 256
 
 /*
@@ -15,15 +16,17 @@ this file actually runs the 'cyanide' virtual machine
 namespace pit {
 
 	enum ExecutionResult {
-		EXEC_OK,
-		EXEC_RUNTIME_ERR,
+		EXEC_OK,			// when an instruction successfully completes operation
+		EXEC_RUNTIME_ERR,   // when there is a VM runtime error
+		EXEC_COMPLETE,      // when the vm successfully completes operation
 	};
 
 	class VM {
 	public:
 		VM();
-		ExecutionResult run(Bundle bundle);
-	private:
+		ExecutionResult run();
+		void load_bundle(Bundle bundle);
+		ExecutionResult step();
 
 		JobPool job_pool;
 

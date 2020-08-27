@@ -2,102 +2,104 @@
 
 namespace pit {
 	VM::VM(){
-		job_pool = JobPool();
+
 	}
 
-	ExecutionResult VM::run(Bundle bundle){
-		std::cout << "running VM" << std::endl;
-
-
+	void VM::load_bundle(Bundle bundle) {
 		this->bundle = bundle;
+	}
 
-		setup_internals();
+	ExecutionResult VM::run(){
+		ExecutionResult result;
+		do {
+			result = step();
+		} while (result == ExecutionResult::EXEC_OK);
+		return result;
+	}
 
-		for (;;) {
+	ExecutionResult VM::step(){
 #ifdef DEBUG_EXEC_INSTR
-			this->bundle.disassemble_instruction((int)(instr_ptr - this->bundle.code.data()));
+		bundle.disassemble_instruction((int)(instr_ptr - bundle.code.data()));
 #endif
-			uint8_t instr = next_instr();
-			switch (instr) {
-				case Instruction::OP_HLT: return ExecutionResult::EXEC_OK;
-				case Instruction::OP_LD_I_IMM: {
-					uint8_t immediate = next_instr();
-					push(Value::num_val(immediate));
-					break;
-				}
-				case Instruction::OP_LD_B_IMM: {
-					uint8_t immediate = next_instr();
-					push(Value::bool_val(immediate ? true : false));
-					break;
-				}
-				case Instruction::OP_LD_CONST: {
-					uint8_t pool_index = next_instr();
-					Value constant = bundle.constant_pool.at(pool_index);
-					push(constant);
-					break;
-				}
-				case Instruction::OP_NEW_BUNDLE:
-				{
-					// get the index into the constant pool
-					uint8_t pool_index = next_instr();
-					// get the constant bundle located in the constant pool (this is a BundleRef value)
-					Value bundle_ref = bundle.constant_pool.at(pool_index);
-					// push it to the stack
-					push(bundle_ref);
-					break;
-				}
-				case Instruction::OP_NEW_CONT:
-				{
-					// get the size of the container
-					uint8_t length = next_instr();
-					// get the initialisation values
-					std::vector<Value> init_values = std::vector<Value>(length);
-					for (int i = 0; i < length; i++)
-						init_values.push_back(pop());
-					//auto container_ref = Value::container_value(length, init_values);
-					//push(container_ref);
-					break;
-				}
-				case Instruction::OP_RET:{
-					/*
-					We need to check the jobpool to see if there are any jobs ready to be ran on the VM.
-					*/
-					return ExecutionResult::EXEC_OK;
-				}
-				case Instruction::OP_YIELD: break;
-				case Instruction::OP_NEG: {
-					if (!peek(0).is_num()) {
-						return runtime_err(std::string("cannot negate non-numeric value"));
-					}
-					push(Value::num_val(-pop().as_num()));
-					break;
-				}
-
-				case Instruction::OP_NOT: {
-					if (!peek(0).is_bool()) {
-						return runtime_err(std::string("cannot not non-boolean value"));
-					}
-					push(Value::bool_val(!pop().as_bool()));
-					break;
-				}
-				case Instruction::OP_ADD:
-				case Instruction::OP_SUB:
-				case Instruction::OP_MUL:
-				case Instruction::OP_DIV:
-				case Instruction::OP_GT:
-				case Instruction::OP_LT:
-				case Instruction::OP_GE:
-				case Instruction::OP_LE:
-				case Instruction::OP_EQ: {
-					if (!binary_op((Instruction)instr))
-						return runtime_err(std::string("cannot apply operator non-numeric values"));
-					break;
-				}
-			}
-#ifdef DEBUG_EXEC_STACK
-			debug_exec_stack();
-#endif
+		uint8_t instr = next_instr();
+		switch (instr) {
+		case Instruction::OP_DBG: debug_exec_stack(); break;
+		case Instruction::OP_HLT: return ExecutionResult::EXEC_COMPLETE;
+		case Instruction::OP_LD_I_IMM: {
+			uint8_t immediate = next_instr();
+			push(Value::num_val(immediate));
+			break;
 		}
+		case Instruction::OP_LD_B_IMM: {
+			uint8_t immediate = next_instr();
+			push(Value::bool_val(immediate ? true : false));
+			break;
+		}
+		case Instruction::OP_LD_CONST: {
+			uint8_t pool_index = next_instr();
+			Value constant = bundle.constant_pool.at(pool_index);
+			push(constant);
+			break;
+		}
+		case Instruction::OP_NEW_BUNDLE:
+		{
+			// get the index into the constant pool
+			uint8_t pool_index = next_instr();
+			// get the constant bundle located in the constant pool (this is a BundleRef value)
+			Value bundle_ref = bundle.constant_pool.at(pool_index);
+			// push it to the stack
+			push(bundle_ref);
+			break;
+		}
+		case Instruction::OP_NEW_CONT:
+		{
+			// get the size of the container
+			uint8_t length = next_instr();
+			// get the initialisation values
+			std::vector<Value> init_values = std::vector<Value>(length);
+			for (int i = 0; i < length; i++)
+				init_values.push_back(pop());
+			auto container_ref = Value::container_value(length, init_values);
+			push(container_ref);
+			break;
+		}
+		case Instruction::OP_RET: {
+			/*
+			We need to check the jobpool to see if there are any jobs ready to be ran on the VM.
+			*/
+			break;
+		}
+		case Instruction::OP_YIELD: break;
+		case Instruction::OP_NEG: {
+			if (!peek(0).is_num()) {
+				return runtime_err(std::string("cannot negate non-numeric value"));
+			}
+			push(Value::num_val(-pop().as_num()));
+			break;
+		}
+
+		case Instruction::OP_NOT: {
+			if (!peek(0).is_bool()) {
+				return runtime_err(std::string("cannot not non-boolean value"));
+			}
+			push(Value::bool_val(!pop().as_bool()));
+			break;
+		}
+		case Instruction::OP_ADD:
+		case Instruction::OP_SUB:
+		case Instruction::OP_MUL:
+		case Instruction::OP_DIV:
+		case Instruction::OP_GT:
+		case Instruction::OP_LT:
+		case Instruction::OP_GE:
+		case Instruction::OP_LE:
+		case Instruction::OP_EQ: {
+			if (!binary_op((Instruction)instr))
+				return runtime_err(std::string("cannot apply operator non-numeric values"));
+			break;
+		}
+		}
+		return ExecutionResult::EXEC_OK;
 	}
 
 	inline int VM::instr_ptr_offset() {
@@ -143,6 +145,7 @@ namespace pit {
 	void VM::setup_internals(){
 		instr_ptr = bundle.code.data();
 		exec_stack_ptr = 0;
+		job_pool = JobPool();
 	}
 
 
@@ -151,6 +154,7 @@ namespace pit {
 		for (int i = 0; i<exec_stack_ptr ; i++) {
 			std::cout << i << " : " << peek(i).debug() << std::endl;
 		}
+		std::cout << "---------" << std::endl;
 	}
 
 	inline uint8_t VM::next_instr(){
