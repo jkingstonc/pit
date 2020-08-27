@@ -14,7 +14,7 @@ namespace pit {
 		std::shared_ptr<RefFN> running_ref_fn;
 		/* The currently executing instruction ptr */
 		uint8_t* instr_ptr;
-		/* A pointer into the VM exec stack pointing to the first local variable for the current fn */
+		/* Point to the start of the allocated stack space for this fn */
 		uint8_t locals_stack_index;
 	}CallFrame;
 }

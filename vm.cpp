@@ -39,6 +39,12 @@ namespace pit {
 			push(constant);
 			break;
 		}
+		case Instruction::OP_LD_LOCAL: {
+			auto first_lvl = next_instr(); // the index into the stack
+			auto second_lvl = next_instr(); // the frame index
+
+			break;
+		}
 		case Instruction::OP_NEW_FN:
 		{
 			// get the index into the constant pool
@@ -54,7 +60,8 @@ namespace pit {
 			// get the size of the container
 			uint8_t length = next_instr();
 			// get the initialisation values
-			std::vector<Value> init_values = std::vector<Value>(length);
+			std::vector<Value> init_values;
+			init_values.reserve(length);
 			for (int i = 0; i < length; i++)
 				init_values.push_back(pop());
 			auto container_ref = Value::container_value(length, init_values);
@@ -66,9 +73,16 @@ namespace pit {
 			Calling works by poping a function off the stack,
 			creating a CallFrame and pushing that to the call stack.
 			*/
-			auto fn = pop().as_fn();
-			CallFrame new_frame(fn, exec_stack_ptr);
-			push_frame(new_frame);
+			auto arg_count = next_instr();
+			auto fn = pop();
+			if(fn.is_fn()){
+				// we mark the base stack index as what the current frame has reached
+				CallFrame new_frame(fn.as_fn(), current_frame->locals_stack_index);
+				push_frame(new_frame);
+			}
+			else {
+				return runtime_err("callee must be a fn reference");
+			}
 			break;
 		}
 		case Instruction::OP_RET: {
@@ -77,7 +91,15 @@ namespace pit {
 			NOTE: We need to check the jobpool to see if there are any jobs ready to be ran on the VM.
 			NOTE: Implement return values.
 			*/
+			int return_amount = next_instr();
+			std::vector<Value> ret_values;
+			ret_values.reserve(return_amount);
+			for (int i = 0; i < return_amount; i++) {
+				ret_values.push_back(pop());
+			}
 			pop_frame();
+			for (auto value : ret_values)
+				push(value);
 			break;
 		}
 		case Instruction::OP_YIELD: break;
@@ -88,7 +110,6 @@ namespace pit {
 			push(Value::num_val(-pop().as_num()));
 			break;
 		}
-
 		case Instruction::OP_NOT: {
 			if (!peek(0).is_bool()) {
 				return runtime_err(std::string("cannot not non-boolean value"));
@@ -118,7 +139,7 @@ namespace pit {
 	}
 
 	inline int VM::stack_ptr_offset() {
-		return exec_stack_ptr;
+		return current_frame->locals_stack_index;
 	}
 
 
@@ -153,21 +174,20 @@ namespace pit {
 	}
 
 
-	void VM::setup_internals(Bundle bundle){
-		exec_stack_ptr = 0;
+	void VM::setup_internals(std::shared_ptr<Bundle> bundle){
 		call_stack_ptr = 0;
 		job_pool = JobPool();
 
 		// we have to create a call frame for the main bundle
-		auto main_fn = Value::fn_value("main_module", std::make_shared<Bundle>(bundle)).as_fn();
-		CallFrame main_frame(main_fn, exec_stack_ptr);
+		auto main_fn = Value::fn_value("main_module", bundle).as_fn();
+		CallFrame main_frame(main_fn, 0);
 		push_frame(main_frame);
 	}
 
 
 	inline void VM::debug_exec_stack() {
 		std::cout << "--stack--" << std::endl;
-		for (int i = 0; i<exec_stack_ptr ; i++) {
+		for (int i = 0; i<current_frame->locals_stack_index ; i++) {
 			std::cout << i << " : " << peek(i).debug() << std::endl;
 		}
 		std::cout << "---------" << std::endl;
@@ -177,20 +197,21 @@ namespace pit {
 		return (*call_stack[call_stack_ptr - 1].instr_ptr++);
 	}
 	inline void VM::push(Value value){
-		exec_stack[exec_stack_ptr++] = value;
+		exec_stack[current_frame->locals_stack_index++] = value;
 	}
 	inline Value VM::pop(){
-		return exec_stack[--exec_stack_ptr];
+		return exec_stack[--current_frame->locals_stack_index];
 	}
 	inline Value VM::peek(uint8_t offset){
 
-		return exec_stack[exec_stack_ptr - offset -1];
+		return exec_stack[current_frame->locals_stack_index - offset -1];
 	}
 	inline void VM::push_frame(CallFrame frame) {
 		call_stack[call_stack_ptr++] = frame;
+		current_frame = &call_stack[call_stack_ptr - 1];
 	}
-	inline CallFrame VM::pop_frame() {
-		return call_stack[--call_stack_ptr];
+	inline void VM::pop_frame() {
+		current_frame = &call_stack[--call_stack_ptr];
 	}
 	inline std::shared_ptr<Bundle> VM::current_bundle() {
 		return call_stack[call_stack_ptr - 1].running_ref_fn->bundle;

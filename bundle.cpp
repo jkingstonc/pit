@@ -49,9 +49,9 @@ namespace pit {
 		case Instruction::OP_NEW_CONT:
 			return one_arg("NEW_CONT", offset);
 		case Instruction::OP_CALL:
-			return no_arg("CALL", offset);
+			return one_arg("CALL", offset);
 		case Instruction::OP_RET:
-			return no_arg("RET", offset);
+			return one_arg("RET", offset);
 		case Instruction::OP_YIELD:
 			return no_arg("YIELD", offset);
 		case Instruction::OP_NEG:

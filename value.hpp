@@ -108,7 +108,7 @@ namespace pit {
 		inline bool is_num() {
 			return type == ValueType::NUMBER;
 		}
-		inline bool is_bundle() {
+		inline bool is_fn() {
 			return type == ValueType::REFERENCE && std::get<std::shared_ptr<Reference>>(data)->ref_type == FN;
 		}
 		inline bool is_container() {

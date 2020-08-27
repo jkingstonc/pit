@@ -31,13 +31,14 @@ namespace pit {
 		JobPool job_pool;
 		uint8_t call_stack_ptr;
 
+		CallFrame* current_frame;
+
 		CallFrame call_stack[CALL_FRAME_SIZE];
 		Value exec_stack[EXEC_STACK_SIZE];
-		uint8_t exec_stack_ptr;
 
 		ExecutionResult runtime_err(std::string msg);
 
-		void setup_internals(Bundle bundle);
+		void setup_internals(std::shared_ptr<Bundle> bundle);
 		inline void debug_exec_stack();
 
 		inline int instr_ptr_offset();
@@ -48,7 +49,7 @@ namespace pit {
 		inline Value pop();
 		inline Value peek(uint8_t offset);
 		inline void push_frame(CallFrame frame);
-		inline CallFrame pop_frame();
+		inline void pop_frame();
 		inline std::shared_ptr<Bundle> current_bundle();
 	};
 }
