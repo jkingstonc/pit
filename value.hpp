@@ -35,10 +35,12 @@ namespace pit {
 	*/
 	typedef struct RefFN : public Reference {
 	public:
-		RefFN(std::string name, std::shared_ptr<Bundle> bundle);
+		RefFN(std::string name, std::shared_ptr<Bundle> bundle, uint8_t arity, uint8_t locals);
 		std::string debug();
 		std::shared_ptr<Bundle> bundle;
 		std::string name;
+		uint8_t arity;
+		uint8_t locals;
 	}RefFN;
 
 	// a container essentially extends reference
@@ -67,10 +69,10 @@ namespace pit {
 			return v;
 		}
 
-		inline static Value fn_value(std::string name, std::shared_ptr<Bundle> bundle){
+		inline static Value fn_value(std::string name, std::shared_ptr<Bundle> bundle, uint8_t arity, uint8_t locals){
 			Value v;
 			v.type = REFERENCE;
-			v.data = std::make_shared<RefFN>(name, bundle);
+			v.data = std::make_shared<RefFN>(name, bundle, arity, locals);
 			return v;
 		}
 

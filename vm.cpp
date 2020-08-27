@@ -77,7 +77,7 @@ namespace pit {
 			auto fn = pop();
 			if(fn.is_fn()){
 				// we mark the base stack index as what the current frame has reached
-				CallFrame new_frame(fn.as_fn(), current_frame->locals_stack_index);
+				CallFrame new_frame(fn.as_fn(), current_frame->sp);
 				push_frame(new_frame);
 			}
 			else {
@@ -139,7 +139,7 @@ namespace pit {
 	}
 
 	inline int VM::stack_ptr_offset() {
-		return current_frame->locals_stack_index;
+		return current_frame->sp;
 	}
 
 
@@ -179,7 +179,7 @@ namespace pit {
 		job_pool = JobPool();
 
 		// we have to create a call frame for the main bundle
-		auto main_fn = Value::fn_value("main_module", bundle).as_fn();
+		auto main_fn = Value::fn_value("main_module", bundle, 0, 0).as_fn();
 		CallFrame main_frame(main_fn, 0);
 		push_frame(main_frame);
 	}
@@ -187,7 +187,7 @@ namespace pit {
 
 	inline void VM::debug_exec_stack() {
 		std::cout << "--stack--" << std::endl;
-		for (int i = 0; i<current_frame->locals_stack_index ; i++) {
+		for (int i = 0; i<current_frame->sp ; i++) {
 			std::cout << i << " : " << peek(i).debug() << std::endl;
 		}
 		std::cout << "---------" << std::endl;
@@ -197,14 +197,14 @@ namespace pit {
 		return (*call_stack[call_stack_ptr - 1].instr_ptr++);
 	}
 	inline void VM::push(Value value){
-		exec_stack[current_frame->locals_stack_index++] = value;
+		exec_stack[current_frame->sp++] = value;
 	}
 	inline Value VM::pop(){
-		return exec_stack[--current_frame->locals_stack_index];
+		return exec_stack[--current_frame->sp];
 	}
 	inline Value VM::peek(uint8_t offset){
 
-		return exec_stack[current_frame->locals_stack_index - offset -1];
+		return exec_stack[current_frame->sp - offset -1];
 	}
 	inline void VM::push_frame(CallFrame frame) {
 		call_stack[call_stack_ptr++] = frame;

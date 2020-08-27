@@ -2,10 +2,12 @@
 
 namespace pit {
 
-	RefFN::RefFN(std::string name, std::shared_ptr<Bundle> bundle) {
+	RefFN::RefFN(std::string name, std::shared_ptr<Bundle> bundle, uint8_t arity, uint8_t locals) {
 		ref_type = FN;
 		this->name = name;
 		this->bundle = bundle;
+		this->arity = arity;
+		this->locals = locals;
 	}
 
 	std::string RefFN::debug() {
