@@ -1,7 +1,8 @@
 #include "vm.hpp"
 
 namespace pit {
-	VM::VM(){
+
+	VM::VM() {
 
 	}
 
@@ -61,6 +62,14 @@ namespace pit {
 				init_values.push_back(pop());
 			auto container_ref = Value::container_value(length, init_values);
 			push(container_ref);
+			break;
+		}
+		case Instruction::OP_CALL: {
+			// get the fn to call from the stack
+			auto fn = pop().as_fn();
+			// create a new frame and push it to the stack
+			CallFrame new_frame(fn, instr_ptr, exec_stack_ptr);
+			push_frame(new_frame);
 			break;
 		}
 		case Instruction::OP_RET: {
@@ -145,7 +154,13 @@ namespace pit {
 	void VM::setup_internals(){
 		instr_ptr = bundle.code.data();
 		exec_stack_ptr = 0;
+		call_stack_ptr = 0;
 		job_pool = JobPool();
+
+		// we have to create a call frame for the main bundle
+		auto main_fn = Value::fn_value("main_module", std::make_shared<Bundle>(bundle)).as_fn();
+		CallFrame main_frame(main_fn, instr_ptr, exec_stack_ptr);
+		push_frame(main_frame);
 	}
 
 
@@ -169,5 +184,11 @@ namespace pit {
 	inline Value VM::peek(uint8_t offset){
 
 		return exec_stack[exec_stack_ptr - offset -1];
+	}
+	inline void VM::push_frame(CallFrame frame) {
+		call_stack[call_stack_ptr++] = frame;
+	}
+	inline CallFrame VM::pop_frame() {
+		return call_stack[--call_stack_ptr];
 	}
 }

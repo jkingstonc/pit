@@ -44,8 +44,12 @@ namespace pit {
 			return one_arg("LD_B_IMM", offset);
 		case Instruction::OP_LD_CONST:
 			return one_arg("LD_CONST", offset);
+		case Instruction::OP_LD_LOCAL:
+			return two_args("LD_LOCALT", offset);
 		case Instruction::OP_NEW_CONT:
 			return one_arg("NEW_CONT", offset);
+		case Instruction::OP_CALL:
+			return no_arg("CALL", offset);
 		case Instruction::OP_RET:
 			return no_arg("RET", offset);
 		case Instruction::OP_YIELD:

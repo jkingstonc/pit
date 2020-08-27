@@ -2,12 +2,16 @@
 
 namespace pit {
 
-	RefBundle::RefBundle(std::shared_ptr<Bundle> bundle) { 
-		ref_type = BUNDLE; this->bundle = bundle; 
+	RefFN::RefFN(std::string name, std::shared_ptr<Bundle> bundle) {
+		ref_type = FN;
+		this->name = name;
+		this->bundle = bundle;
 	}
 
-	std::string RefBundle::debug() { 
-		return "<ref-bundle>"; 
+	std::string RefFN::debug() {
+		std::ostringstream ss;
+		ss << "<ref-fn " << name << ">";
+		return ss.str(); 
 	}
 
 	RefContainer::RefContainer(uint32_t length, std::vector<Value> init_values) { 

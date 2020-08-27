@@ -3,6 +3,7 @@
 #include "instruction.hpp"
 #include "value.hpp"
 #include "job.hpp"
+#include "frame.hpp"
 #include <stack>
 
 #define DEBUG_EXEC_INSTR
@@ -32,7 +33,9 @@ namespace pit {
 
 		Bundle bundle;
 		uint8_t*instr_ptr;
+		uint8_t call_stack_ptr;
 
+		CallFrame call_stack[CALL_FRAME_SIZE];
 		Value exec_stack[EXEC_STACK_SIZE];
 		uint8_t exec_stack_ptr;
 
@@ -48,5 +51,7 @@ namespace pit {
 		inline void push(Value value);
 		inline Value pop();
 		inline Value peek(uint8_t offset);
+		inline void push_frame(CallFrame frame);
+		inline CallFrame pop_frame();
 	};
 }

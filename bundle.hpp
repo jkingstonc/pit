@@ -21,7 +21,6 @@ namespace pit {
 		void to_file(std::string filename);
 		void disassemble();
 		uint32_t disassemble_instruction(uint32_t offset);
-
 		// constants
 		std::vector<Value> constant_pool;
 		// locals
@@ -30,8 +29,6 @@ namespace pit {
 		std::vector<uint8_t> code;
 		// lines corresponding to bytecode
 		std::vector<uint32_t> lines;
-
-		std::string name;
 	private:
 		inline int no_arg(std::string instr, uint32_t offset);
 		inline int one_arg(std::string instr, uint32_t offset);

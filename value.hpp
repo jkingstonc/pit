@@ -12,7 +12,7 @@ namespace pit {
 	struct Value;
 
 	enum ReferenceType {
-		BUNDLE,
+		FN,
 		CONTAINER,
 	};
 
@@ -30,12 +30,16 @@ namespace pit {
 		virtual std::string debug() = 0;
 	} Reference;
 
-	typedef struct RefBundle : public Reference {
+	/*
+	A RefFN is assentially a heap allocated bundle
+	*/
+	typedef struct RefFN : public Reference {
 	public:
-		RefBundle(std::shared_ptr<Bundle> bundle);
+		RefFN(std::string name, std::shared_ptr<Bundle> bundle);
 		std::string debug();
 		std::shared_ptr<Bundle> bundle;
-	}RefBundle;
+		std::string name;
+	}RefFN;
 
 	// a container essentially extends reference
 	typedef struct RefContainer : public Reference {
@@ -63,10 +67,10 @@ namespace pit {
 			return v;
 		}
 
-		inline static Value bundle_value(std::shared_ptr<Bundle> bundle){
+		inline static Value fn_value(std::string name, std::shared_ptr<Bundle> bundle){
 			Value v;
 			v.type = REFERENCE;
-			v.data = std::make_shared<RefBundle>(bundle);
+			v.data = std::make_shared<RefFN>(name, bundle);
 			return v;
 		}
 
@@ -91,8 +95,8 @@ namespace pit {
 		inline float as_num() {
 			return std::get<float>(data); 
 		}
-		inline std::shared_ptr<RefBundle> as_bundle() { 
-			return std::dynamic_pointer_cast<RefBundle>(std::get<std::shared_ptr<Reference>>(data)); 
+		inline std::shared_ptr<RefFN> as_fn() {
+			return std::dynamic_pointer_cast<RefFN>(std::get<std::shared_ptr<Reference>>(data));
 		}
 		inline std::shared_ptr<RefContainer> as_container() {
 			return std::dynamic_pointer_cast<RefContainer>(std::get<std::shared_ptr<Reference>>(data)); 
@@ -105,7 +109,7 @@ namespace pit {
 			return type == ValueType::NUMBER;
 		}
 		inline bool is_bundle() {
-			return type == ValueType::REFERENCE && std::get<std::shared_ptr<Reference>>(data)->ref_type == BUNDLE;
+			return type == ValueType::REFERENCE && std::get<std::shared_ptr<Reference>>(data)->ref_type == FN;
 		}
 		inline bool is_container() {
 			return type == ValueType::REFERENCE && std::get<std::shared_ptr<Reference>>(data)->ref_type == CONTAINER;
