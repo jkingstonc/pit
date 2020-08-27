@@ -26,13 +26,9 @@ namespace pit {
 	public:
 		VM();
 		ExecutionResult run();
-		void load_bundle(Bundle bundle);
 		ExecutionResult step();
 
 		JobPool job_pool;
-
-		Bundle bundle;
-		uint8_t*instr_ptr;
 		uint8_t call_stack_ptr;
 
 		CallFrame call_stack[CALL_FRAME_SIZE];
@@ -41,7 +37,7 @@ namespace pit {
 
 		ExecutionResult runtime_err(std::string msg);
 
-		void setup_internals();
+		void setup_internals(Bundle bundle);
 		inline void debug_exec_stack();
 
 		inline int instr_ptr_offset();
@@ -53,5 +49,6 @@ namespace pit {
 		inline Value peek(uint8_t offset);
 		inline void push_frame(CallFrame frame);
 		inline CallFrame pop_frame();
+		inline std::shared_ptr<Bundle> current_bundle();
 	};
 }

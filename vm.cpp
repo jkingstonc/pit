@@ -6,9 +6,6 @@ namespace pit {
 
 	}
 
-	void VM::load_bundle(Bundle bundle) {
-		this->bundle = bundle;
-	}
 
 	ExecutionResult VM::run(){
 		ExecutionResult result;
@@ -20,7 +17,7 @@ namespace pit {
 
 	ExecutionResult VM::step(){
 #ifdef DEBUG_EXEC_INSTR
-		bundle.disassemble_instruction((int)(instr_ptr - bundle.code.data()));
+		call_stack[call_stack_ptr-1].running_ref_fn->bundle->disassemble_instruction((int)(call_stack[call_stack_ptr-1].instr_ptr - current_bundle()->code.data()));
 #endif
 		uint8_t instr = next_instr();
 		switch (instr) {
@@ -38,18 +35,18 @@ namespace pit {
 		}
 		case Instruction::OP_LD_CONST: {
 			uint8_t pool_index = next_instr();
-			Value constant = bundle.constant_pool.at(pool_index);
+			Value constant = current_bundle()->constant_pool.at(pool_index);
 			push(constant);
 			break;
 		}
-		case Instruction::OP_NEW_BUNDLE:
+		case Instruction::OP_NEW_FN:
 		{
 			// get the index into the constant pool
 			uint8_t pool_index = next_instr();
-			// get the constant bundle located in the constant pool (this is a BundleRef value)
-			Value bundle_ref = bundle.constant_pool.at(pool_index);
+			// get the constant fn located in the constant pool (this is a RefFN value)
+			Value fn_ref = current_bundle()->constant_pool.at(pool_index);
 			// push it to the stack
-			push(bundle_ref);
+			push(fn_ref);
 			break;
 		}
 		case Instruction::OP_NEW_CONT:
@@ -65,17 +62,22 @@ namespace pit {
 			break;
 		}
 		case Instruction::OP_CALL: {
-			// get the fn to call from the stack
+			/*
+			Calling works by poping a function off the stack,
+			creating a CallFrame and pushing that to the call stack.
+			*/
 			auto fn = pop().as_fn();
-			// create a new frame and push it to the stack
-			CallFrame new_frame(fn, instr_ptr, exec_stack_ptr);
+			CallFrame new_frame(fn, exec_stack_ptr);
 			push_frame(new_frame);
 			break;
 		}
 		case Instruction::OP_RET: {
 			/*
-			We need to check the jobpool to see if there are any jobs ready to be ran on the VM.
+			Returning works by poping the top CallFrame from the call stack.
+			NOTE: We need to check the jobpool to see if there are any jobs ready to be ran on the VM.
+			NOTE: Implement return values.
 			*/
+			pop_frame();
 			break;
 		}
 		case Instruction::OP_YIELD: break;
@@ -112,7 +114,7 @@ namespace pit {
 	}
 
 	inline int VM::instr_ptr_offset() {
-		return (int)((instr_ptr - 1) - bundle.code.data());
+		return (int)((call_stack[call_stack_ptr-1].instr_ptr - 1) - current_bundle()->code.data());
 	}
 
 	inline int VM::stack_ptr_offset() {
@@ -144,22 +146,21 @@ namespace pit {
 	}
 
 	ExecutionResult VM::runtime_err(std::string msg){
-		int line_ptr = (int)((instr_ptr - 1) - bundle.code.data());
-		uint32_t line = bundle.lines[line_ptr];
+		int line_ptr = (int)((call_stack[call_stack_ptr-1].instr_ptr - 1) - current_bundle()->code.data());
+		uint32_t line = current_bundle()->lines[line_ptr];
 		std::cout << "Runtime Error [line " << line << "]\n" << msg << std::endl;
 		return ExecutionResult::EXEC_RUNTIME_ERR;
 	}
 
 
-	void VM::setup_internals(){
-		instr_ptr = bundle.code.data();
+	void VM::setup_internals(Bundle bundle){
 		exec_stack_ptr = 0;
 		call_stack_ptr = 0;
 		job_pool = JobPool();
 
 		// we have to create a call frame for the main bundle
 		auto main_fn = Value::fn_value("main_module", std::make_shared<Bundle>(bundle)).as_fn();
-		CallFrame main_frame(main_fn, instr_ptr, exec_stack_ptr);
+		CallFrame main_frame(main_fn, exec_stack_ptr);
 		push_frame(main_frame);
 	}
 
@@ -173,7 +174,7 @@ namespace pit {
 	}
 
 	inline uint8_t VM::next_instr(){
-		return (*instr_ptr++);
+		return (*call_stack[call_stack_ptr - 1].instr_ptr++);
 	}
 	inline void VM::push(Value value){
 		exec_stack[exec_stack_ptr++] = value;
@@ -190,5 +191,8 @@ namespace pit {
 	}
 	inline CallFrame VM::pop_frame() {
 		return call_stack[--call_stack_ptr];
+	}
+	inline std::shared_ptr<Bundle> VM::current_bundle() {
+		return call_stack[call_stack_ptr - 1].running_ref_fn->bundle;
 	}
 }
