@@ -46,6 +46,8 @@ namespace pit {
 		inline int stack_ptr_offset();
 		inline bool binary_op(Instruction op);
 		inline uint8_t next_instr();
+		inline uint8_t get_ubyte();
+		inline int8_t get_sbyte();
 		inline void push(Value value);
 		inline Value pop();
 		inline Value peek(uint8_t offset);

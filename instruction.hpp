@@ -15,7 +15,7 @@ namespace pit {
 		OP_LD_CONST,
 		OP_LD_LOCAL,
 		OP_ST_LOCAL,
-		OP_JMP,
+		OP_JMP,		// jump if true
 		OP_CALL,
 		OP_YIELD,
 		OP_RET,

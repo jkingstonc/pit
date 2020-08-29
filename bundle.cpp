@@ -48,6 +48,8 @@ namespace pit {
 			return two_args("LD_LOCAL", offset);
 		case Instruction::OP_ST_LOCAL:
 			return two_args("ST_LOCAL", offset);
+		case Instruction::OP_JMP:
+			return one_arg("JMP", offset);
 		case Instruction::OP_NEW_FN:
 			return no_arg("NEW_FN", offset);
 		case Instruction::OP_NEW_ARR:

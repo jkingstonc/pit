@@ -59,6 +59,15 @@ namespace pit {
 			exec_stack[frame->sp_base + internal_index] = pop();
 			break;
 		}
+		case Instruction::OP_JMP: {
+			auto jmp_offset = get_sbyte();
+			auto condition = pop();
+			std::cout << "jumping to offset " << (int)jmp_offset << " value " << condition.debug() << std::endl;
+			if (condition.as_bool()) {
+				current_frame->instr_ptr += jmp_offset;
+			}
+			break;
+		}
 		case Instruction::OP_NEW_FN:
 		{
 			// get the index into the constant pool
@@ -216,6 +225,14 @@ namespace pit {
 	inline uint8_t VM::next_instr(){
 		return (*call_stack[call_stack_ptr - 1].instr_ptr++);
 	}
+	inline uint8_t VM::get_ubyte() {
+		return next_instr();
+	}
+	
+	inline int8_t VM::get_sbyte(){
+		return get_ubyte()-127;
+	}
+
 	inline void VM::push(Value value){
 		exec_stack[current_frame->sp++] = value;
 	}
