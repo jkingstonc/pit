@@ -20,6 +20,7 @@ namespace pit {
 		OP_YIELD,
 		OP_RET,
 		OP_NEW_FN,
+		OP_NEW_ARR,
 		OP_NEW_CONT,
 		OP_GET_CONT,
 		OP_SET_CONT,

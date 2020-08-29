@@ -16,9 +16,19 @@ namespace pit {
 		return ss.str(); 
 	}
 
-	RefContainer::RefContainer(uint32_t length, std::vector<Value> init_values) { 
+	RefArr::RefArr(uint8_t size) {
+		this->size = size;
+	}
+
+	std::string RefArr::debug() {
+		std::ostringstream ss;
+		ss << "<ref-arr " << size << ">";
+		return ss.str();
+	}
+
+	RefContainer::RefContainer(uint32_t size, std::vector<Value> init_values) { 
 		ref_type = CONTAINER;
-		this->size = length;
+		this->size = size;
 		this->data = init_values;
 	}
 

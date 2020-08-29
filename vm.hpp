@@ -40,6 +40,7 @@ namespace pit {
 
 		void setup_internals(std::shared_ptr<Bundle> bundle);
 		inline void debug_exec_stack();
+		inline void debug_traceback();
 
 		inline int instr_ptr_offset();
 		inline int stack_ptr_offset();
@@ -50,6 +51,7 @@ namespace pit {
 		inline Value peek(uint8_t offset);
 		inline void push_frame(CallFrame frame);
 		inline void pop_frame();
+		inline CallFrame* peek_frame(uint8_t offset);
 		inline std::shared_ptr<Bundle> current_bundle();
 	};
 }

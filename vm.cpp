@@ -3,7 +3,7 @@
 namespace pit {
 
 	VM::VM() {
-
+		call_stack_ptr = 0;
 	}
 
 
@@ -21,7 +21,10 @@ namespace pit {
 #endif
 		uint8_t instr = next_instr();
 		switch (instr) {
-		case Instruction::OP_DBG: debug_exec_stack(); break;
+		case Instruction::OP_DBG: {
+			debug_exec_stack(); 
+			break; 
+		}
 		case Instruction::OP_HLT: return ExecutionResult::EXEC_COMPLETE;
 		case Instruction::OP_LD_I_IMM: {
 			uint8_t immediate = next_instr();
@@ -40,9 +43,20 @@ namespace pit {
 			break;
 		}
 		case Instruction::OP_LD_LOCAL: {
-			auto first_lvl = next_instr(); // the index into the stack
-			auto second_lvl = next_instr(); // the frame index
-
+			auto internal_index = next_instr(); // the index inside the frame 
+			auto frame_index = next_instr(); // the frame index
+			auto frame = peek_frame(frame_index);
+			// now we have the frame, we can use the base_sp to access the stack address
+			auto local = exec_stack[frame->sp_base + internal_index];
+			push(local);
+			break;
+		}
+		case Instruction::OP_ST_LOCAL: {
+			auto internal_index = next_instr(); // the index inside the frame 
+			auto frame_index = next_instr(); // the frame index
+			auto frame = peek_frame(frame_index);
+			// now we have the frame, we can use the base_sp to access the stack address
+			exec_stack[frame->sp_base + internal_index] = pop();
 			break;
 		}
 		case Instruction::OP_NEW_FN:
@@ -76,14 +90,13 @@ namespace pit {
 			auto arg_count = next_instr();
 			auto fn = pop();
 			if(fn.is_fn()){
+				// the new frame is being given an incorrect stack pointer!
 				// we mark the base stack index as what the current frame has reached
 				CallFrame new_frame(fn.as_fn(), current_frame->sp);
 				push_frame(new_frame);
+				break;
 			}
-			else {
-				return runtime_err("callee must be a fn reference");
-			}
-			break;
+			return runtime_err("callee must be a fn reference");
 		}
 		case Instruction::OP_RET: {
 			/*
@@ -98,6 +111,7 @@ namespace pit {
 				ret_values.push_back(pop());
 			}
 			pop_frame();
+			// the current frame sp here is wrong! it is 1 not 0
 			for (auto value : ret_values)
 				push(value);
 			break;
@@ -170,6 +184,7 @@ namespace pit {
 		int line_ptr = (int)((call_stack[call_stack_ptr-1].instr_ptr - 1) - current_bundle()->code.data());
 		uint32_t line = current_bundle()->lines[line_ptr];
 		std::cout << "Runtime Error [line " << line << "]\n" << msg << std::endl;
+		debug_traceback();
 		return ExecutionResult::EXEC_RUNTIME_ERR;
 	}
 
@@ -177,7 +192,6 @@ namespace pit {
 	void VM::setup_internals(std::shared_ptr<Bundle> bundle){
 		call_stack_ptr = 0;
 		job_pool = JobPool();
-
 		// we have to create a call frame for the main bundle
 		auto main_fn = Value::fn_value("main_module", bundle, 0, 0).as_fn();
 		CallFrame main_frame(main_fn, 0);
@@ -191,6 +205,12 @@ namespace pit {
 			std::cout << i << " : " << peek(i).debug() << std::endl;
 		}
 		std::cout << "---------" << std::endl;
+	}
+
+	inline void VM::debug_traceback() {
+		std::cout << "--traceback most recent call--" << std::endl;
+		for (int i = 0; i < call_stack_ptr; i++)
+			std::cout << "-> " << peek_frame(i)->running_ref_fn->name << std::endl;
 	}
 
 	inline uint8_t VM::next_instr(){
@@ -208,10 +228,13 @@ namespace pit {
 	}
 	inline void VM::push_frame(CallFrame frame) {
 		call_stack[call_stack_ptr++] = frame;
-		current_frame = &call_stack[call_stack_ptr - 1];
+		current_frame = &call_stack[call_stack_ptr-1];
+	}
+	inline CallFrame* VM::peek_frame(uint8_t offset) {
+		return &call_stack[call_stack_ptr - offset - 1];
 	}
 	inline void VM::pop_frame() {
-		current_frame = &call_stack[--call_stack_ptr];
+		current_frame = &call_stack[call_stack_ptr--];
 	}
 	inline std::shared_ptr<Bundle> VM::current_bundle() {
 		return call_stack[call_stack_ptr - 1].running_ref_fn->bundle;

@@ -13,6 +13,7 @@ namespace pit {
 
 	enum ReferenceType {
 		FN,
+		ARR,
 		CONTAINER,
 	};
 
@@ -42,6 +43,14 @@ namespace pit {
 		uint8_t arity;
 		uint8_t locals;
 	}RefFN;
+
+
+	typedef struct RefArr : public Reference {
+	public:
+		RefArr(uint8_t size);
+		std::string debug();
+		uint8_t size;
+	}RefArr;
 
 	// a container essentially extends reference
 	typedef struct RefContainer : public Reference {
@@ -76,6 +85,13 @@ namespace pit {
 			return v;
 		}
 
+		inline static Value arr_value(uint8_t size) {
+			Value v;
+			v.type = REFERENCE;
+			v.data = std::make_shared<RefArr>(size);
+			return v;
+		}
+
 		inline static Value container_value(uint32_t size, std::vector<Value> init_values) {
 			Value v;
 			v.type = REFERENCE;
@@ -100,6 +116,9 @@ namespace pit {
 		inline std::shared_ptr<RefFN> as_fn() {
 			return std::dynamic_pointer_cast<RefFN>(std::get<std::shared_ptr<Reference>>(data));
 		}
+		inline std::shared_ptr<RefArr> as_arr() {
+			return std::dynamic_pointer_cast<RefArr>(std::get<std::shared_ptr<Reference>>(data));
+		}
 		inline std::shared_ptr<RefContainer> as_container() {
 			return std::dynamic_pointer_cast<RefContainer>(std::get<std::shared_ptr<Reference>>(data)); 
 		}
@@ -112,6 +131,9 @@ namespace pit {
 		}
 		inline bool is_fn() {
 			return type == ValueType::REFERENCE && std::get<std::shared_ptr<Reference>>(data)->ref_type == FN;
+		}
+		inline bool is_arr() {
+			return type == ValueType::REFERENCE && std::get<std::shared_ptr<Reference>>(data)->ref_type == ARR;
 		}
 		inline bool is_container() {
 			return type == ValueType::REFERENCE && std::get<std::shared_ptr<Reference>>(data)->ref_type == CONTAINER;
